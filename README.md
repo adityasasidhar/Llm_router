@@ -10,6 +10,30 @@ LLM Router combines rule-based heuristics with score-based optimization to selec
 
 ---
 
+## Benchmark Results
+
+Tested on 50 queries across 5 categories:
+
+| Metric | Value |
+|--------|-------|
+| Overall Accuracy | **94%** |
+| Avg Routing Latency | **0.008ms** |
+| Hard Route Usage | 80% |
+
+### Category Performance
+
+| Category | Accuracy | Description |
+|----------|----------|-------------|
+| Reasoning | 100% | Math, logic, code analysis |
+| Large (Multimodal + Reasoning) | 100% | Complex multi-capability tasks |
+| Safety (Blocked) | 100% | Harmful content detection |
+| Simple | 90% | Basic Q&A, greetings |
+| Multimodal | 80% | Image description, OCR |
+
+Run benchmarks: `cd Router && python benchmark.py`
+
+---
+
 ## Architecture
 
 ```mermaid

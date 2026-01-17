@@ -82,27 +82,3 @@ class UnifiedRouter:
         """Synchronous wrapper for route()."""
         return asyncio.run(self.route(query, multimodal))
 
-
-async def main():
-    router = UnifiedRouter()
-    
-    # Example usage
-    queries = [
-        "What is the capital of France?",
-        "Explain quantum mechanics step-by-step",
-        "Describe this image",
-    ]
-    
-    # Route multiple queries concurrently
-    tasks = [router.route(q, multimodal=(i == 2)) for i, q in enumerate(queries)]
-    results = await asyncio.gather(*tasks)
-    
-    for query, result in zip(queries, results):
-        print(f"Query: {query}")
-        print(f"  Model: {result['model']}")
-        print(f"  Method: {result['routing_method']}")
-        print()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

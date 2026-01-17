@@ -148,7 +148,7 @@ def run_tests():
         print(f"[{i+1}/{len(test_cases)}] Length: {word_count} words | Multimodal: {multimodal}")
         
         try:
-            result = router.route(query, multimodal)
+            result = router.route_sync(query, multimodal)
             
             model = result['model']
             method = result['routing_method']
