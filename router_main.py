@@ -13,6 +13,7 @@ dspy.configure(lm=lm)
 
 class Response(dspy.Signature):
     query: str = dspy.InputField(desc="The query")
+    reasoning: str = dspy.InputField(desc="The reasoning for the query at hand")
     models: Literal[
         "qwen3:1.7b",
         "ibm/granite4:3b",
@@ -22,7 +23,7 @@ class Response(dspy.Signature):
 
 class COT(dspy.Signature):
     query: str = dspy.InputField(desc="The task or query")
-    cot_answer: str = dspy.OutputField(desc="Reasoning about the task")
+    cot_answer: str = dspy.OutputField(desc="What is the ")
 
 
 class LlmRouter(dspy.Module):
@@ -33,10 +34,10 @@ class LlmRouter(dspy.Module):
 
     def forward(self, query: str):
         thought = self.think(query=query)
-        decision = self.route(query=query)
+        decision = self.route(query=query, reasoning=thought.cot_answer)
         return {
-            "cot_answer": thought.cot_answer,
-            "models": decision.models,
+            "Chain of Thought": thought.cot_answer,
+            "model": decision.models,
         }
 
 router = LlmRouter()
