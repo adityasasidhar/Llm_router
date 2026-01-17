@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
+import json
+from pathlib import Path
 
 @dataclass
 class Signal:
@@ -9,35 +11,30 @@ class Signal:
     multimodal : bool
     safety_score : float
 
+# Load keywords from JSON file
+_words_path = Path(__file__).parent / "words.json"
+with open(_words_path, "r") as f:
+    _keywords = json.load(f)
+
 def extract_signal(query: str, multimodal: bool) -> Signal:
-    """let's write a function to generate the signal for a prompt"""
+    """Extract signal characteristics from a query."""
     words = query.split()
-
     tokens = int(len(words) * 1.5)
-
-    reasoning_keywords = [
-        "reasoning", "step-by-step", "explain", "analyze", "think", "solve",
-        "understand", "derive", "derivation", "theory", "complex", "detail",
-        "logic", "proof", "prove", "calculate", "math", "code", "programming",
-        "algorithm", "why", "how", "compare", "contrast", "evaluate"
-    ]
-    reasoning = any(keyword in query.lower() for keyword in reasoning_keywords)
-
+    
+    query_lower = query.lower()
+    
+    # Check for reasoning keywords
+    reasoning = any(keyword in query_lower for keyword in _keywords["reasoning"])
+    
+    # Determine latency requirements
     latency = "medium"
-
-    low_latency_keywords = ["quickly", "fast", "short", "brief", "summary", "summarize", "tl;dr", "instant"]
-    high_latency_keywords = ["detailed", "comprehensive", "deep dive", "thorough", "extensive", "long"]
-
-    if any(k in query.lower() for k in low_latency_keywords):
+    if any(k in query_lower for k in _keywords["low_latency"]):
         latency = "low"
-    elif any(k in query.lower() for k in high_latency_keywords):
+    elif any(k in query_lower for k in _keywords["high_latency"]):
         latency = "high"
-
-    unsafe_keywords = [
-        "hack", "kill", "steal", "bomb", "murder", "suicide", "terror", 
-        "poison", "drug", "weapon", "attack", "exploit", "malware"
-    ]
-    if any(word in query.lower() for word in unsafe_keywords):
+    
+    # Check safety
+    if any(word in query_lower for word in _keywords["unsafe"]):
         safety_score = 0.1
     else:
         safety_score = 0.95
