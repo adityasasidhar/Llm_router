@@ -1,9 +1,11 @@
+import asyncio
 import dspy
 from Signals import extract_signal, Signal
 from Hard_Route import hard_route, ModelName
 from Policy_Optimization import policy_route, score_models
 from task_classification import TaskClassifier
 from typing import Literal, Optional, Dict, Any
+from concurrent.futures import ThreadPoolExecutor
 
 lm = dspy.LM(
     model="ollama_chat/qwen3:0.6b",
@@ -14,19 +16,21 @@ lm = dspy.LM(
 )
 dspy.configure(lm=lm)
 
+# Thread pool for running sync DSPy calls
+_executor = ThreadPoolExecutor(max_workers=4)
+
 
 class UnifiedRouter:
     """
     Unified LLM Router with multiple routing strategies:
     - hard_route: Rule-based routing using hard-coded logic
     - policy_route: Score-based optimization for best model selection
-    - cot_route: Chain-of-thought reasoning for routing decisions
     """
 
     def __init__(self):
         self.task_classifier = TaskClassifier()
 
-    def route(self, query: str, multimodal: bool = False) -> Dict[str, Any]:
+    async def route(self, query: str, multimodal: bool = False) -> Dict[str, Any]:
         """
         Route a query to the appropriate model.
 
@@ -37,12 +41,17 @@ class UnifiedRouter:
         Returns:
             Dictionary with routing decision and metadata
         """
-        # Extract signal from query
+        # Extract signal from query (fast, no I/O)
         signal = extract_signal(query, multimodal)
         
-        # Determine complexity
+        # Run task classification in thread pool (DSPy calls are sync)
+        loop = asyncio.get_event_loop()
         try:
-            complexity = self.task_classifier(query)
+            complexity = await loop.run_in_executor(
+                _executor, 
+                self.task_classifier, 
+                query
+            )
         except Exception as e:
             print(f"Warning: Task classification failed ({e}), defaulting to 'medium'")
             complexity = "medium"
@@ -51,7 +60,7 @@ class UnifiedRouter:
         model = hard_route(signal)
         routing_method = "hard_route"
 
-        # If Hard Route returns None or we want to optimize, use Policy Route
+        # If Hard Route returns None, use Policy Route
         if model is None:
             model = policy_route(signal, complexity)
             routing_method = "policy_route"
@@ -69,15 +78,31 @@ class UnifiedRouter:
             }
         }
 
-def main():
+    def route_sync(self, query: str, multimodal: bool = False) -> Dict[str, Any]:
+        """Synchronous wrapper for route()."""
+        return asyncio.run(self.route(query, multimodal))
+
+
+async def main():
     router = UnifiedRouter()
     
     # Example usage
-    query = "Explain quantum mechanics step-by-step"
-    result = router.route(query)
-    print(f"Query: {query}")
-    print(f"Selected Model: {result['model']}")
-    print(f"Method: {result['routing_method']}")
+    queries = [
+        "What is the capital of France?",
+        "Explain quantum mechanics step-by-step",
+        "Describe this image",
+    ]
+    
+    # Route multiple queries concurrently
+    tasks = [router.route(q, multimodal=(i == 2)) for i, q in enumerate(queries)]
+    results = await asyncio.gather(*tasks)
+    
+    for query, result in zip(queries, results):
+        print(f"Query: {query}")
+        print(f"  Model: {result['model']}")
+        print(f"  Method: {result['routing_method']}")
+        print()
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
