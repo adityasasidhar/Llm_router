@@ -18,77 +18,43 @@ LLM Router uses a **unified approach** to select the best model for any given qu
 
 ```mermaid
 flowchart TD
-    subgraph Input["📥 INPUT LAYER"]
-        A["🗣️ User Query"]
-        M{"🖼️ Multimodal?"}
-    end
-
-    subgraph Signal["🔍 SIGNAL EXTRACTION"]
-        B["📊 Token Counter"]
-        C["🧠 Reasoning Detector"]
-        D["⚡ Latency Analyzer"]
-        E["🛡️ Safety Scorer"]
-    end
-
-    subgraph Classification["🏷️ TASK CLASSIFICATION"]
-        F[["DSPy Classifier"]]
-        G["Low Complexity"]
-        H["Medium Complexity"]  
-        I["High Complexity"]
-    end
-
-    subgraph Routing["🚦 ROUTING ENGINE"]
-        J{"Tier 1: Hard Route"}
-        K{"Tier 2: Policy Route"}
-        L["Score All Models"]
-        N["Select Highest Score"]
-    end
-
-    subgraph Models["🤖 MODEL POOL"]
-        O["gemma3:1b"]
-        P["qwen3 family"]
-        Q["ministral-3 family"]
-        R["gpt-oss:20b"]
-    end
-
-    subgraph Output["📤 OUTPUT"]
-        S["✅ Selected Model"]
-        T["📋 Routing Metadata"]
-    end
-
-    A --> M
-    M --> B
-    M --> C
-    M --> D
-    M --> E
+    A["🗣️ User Query"] --> M{"🖼️ Multimodal?"}
     
-    B --> F
+    M --> B["📊 Token Counter"]
+    M --> C["🧠 Reasoning Detector"]
+    M --> D["⚡ Latency Analyzer"]
+    M --> E["🛡️ Safety Scorer"]
+    
+    B --> F[["DSPy Classifier"]]
     C --> F
     D --> F
     E --> F
     
-    F --> G
-    F --> H
-    F --> I
+    F --> G["Low Complexity"]
+    F --> H["Medium Complexity"]
+    F --> I["High Complexity"]
     
-    G --> J
+    G --> J{"Tier 1: Hard Route"}
     H --> J
     I --> J
     
-    J -->|"Match Found ✓"| S
-    J -->|"No Match"| K
+    J -->|"Match Found ✓"| S["✅ Selected Model"]
+    J -->|"No Match"| K{"Tier 2: Policy Route"}
     
-    K --> L
-    L --> N
-    N --> O
-    N --> P
-    N --> Q
-    N --> R
+    K --> L["Score All Models"]
+    L --> N["Select Highest Score"]
+    
+    N --> O["gemma3:1b"]
+    N --> P["qwen3 family"]
+    N --> Q["ministral-3 family"]
+    N --> R["gpt-oss:20b"]
+    
     O --> S
     P --> S
     Q --> S
     R --> S
-    S --> T
+    
+    S --> T["📋 Routing Metadata"]
 ```
 
 ---
@@ -119,19 +85,11 @@ Using **DSPy**, the router classifies complexity:
 
 ```mermaid
 flowchart LR
-    subgraph T1["⚡ TIER 1: Hard Route"]
-        A["Rule-Based Engine"]
-        B["Immediate Decisions"]
-        C["Zero Latency"]
-    end
-    
-    subgraph T2["🎯 TIER 2: Policy Route"]
-        D["Score Calculator"]
-        E["Optimization"]
-        F["Best Fit Selection"]
-    end
-    
-    T1 -->|"Fallback"| T2
+    A["⚡ Rule-Based Engine"] --> B["Immediate Decisions"]
+    B --> C["Zero Latency"]
+    C -->|"Fallback"| D["🎯 Score Calculator"]
+    D --> E["Optimization"]
+    E --> F["Best Fit Selection"]
 ```
 
 #### Tier 1: Hard Route (Fast Path)
@@ -156,23 +114,14 @@ Calculates weighted compatibility scores:
 ## 🤖 Supported Models
 
 ```mermaid
-flowchart TB
-    subgraph Small["🐇 Small - Fast"]
-        A["qwen3:0.6b<br/>🧠 Reasoning"]
-        B["gemma3:1b<br/>💬 Instructions"]
-        C["ministral-3:3b<br/>🖼️ Multimodal"]
-    end
-    
-    subgraph Medium["🦊 Medium"]
-        D["qwen3:4b<br/>🧠 Reasoning"]
-        E["ministral-3:8b<br/>🖼️ Multimodal"]
-        F["qwen3:8b<br/>🧠 Reasoning"]
-    end
-    
-    subgraph Large["🦁 Large"]
-        G["ministral-3:14b<br/>🖼️ Multimodal"]
-        H["gpt-oss:20b<br/>🧠🖼️ Everything"]
-    end
+flowchart LR
+    A["qwen3:0.6b 🧠"] --- B["gemma3:1b 💬"]
+    B --- C["ministral-3:3b 🖼️"]
+    C --- D["qwen3:4b 🧠"]
+    D --- E["ministral-3:8b 🖼️"]
+    E --- F["qwen3:8b �"]
+    F --- G["ministral-3:14b 🖼️"]
+    G --- H["gpt-oss:20b 🧠🖼️"]
 ```
 
 | Model | Size | Reasoning | Multimodal | Speed | Best For |
