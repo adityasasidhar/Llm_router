@@ -7,6 +7,7 @@ lm = dspy.LM(
     api_key="",
     num_retries=2,
     temperature=0.7,
+    max_tokens=256
 )
 
 dspy.configure(lm=lm)
@@ -41,5 +42,5 @@ class LlmRouter(dspy.Module):
         }
 
 router = LlmRouter()
-out = router(query="I need fast local reasoning for coding tasks")
+out = router(query="Write a short poem about the sea.")
 print(out)
