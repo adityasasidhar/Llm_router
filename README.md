@@ -17,11 +17,10 @@ LLM Router uses a **unified approach** to select the best model for any given qu
 ## 🔄 Architecture Flow
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#6366f1', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4f46e5', 'lineColor': '#a78bfa', 'secondaryColor': '#f0abfc', 'tertiaryColor': '#fef3c7', 'edgeLabelBackground':'#fff'}}}%%
 flowchart TD
     subgraph Input["📥 INPUT LAYER"]
-        A[/"🗣️ User Query"/]
-        M{{"🖼️ Multimodal?"}}
+        A["🗣️ User Query"]
+        M{"🖼️ Multimodal?"}
     end
 
     subgraph Signal["🔍 SIGNAL EXTRACTION"]
@@ -39,48 +38,57 @@ flowchart TD
     end
 
     subgraph Routing["🚦 ROUTING ENGINE"]
-        J{{"Tier 1: Hard Route"}}
-        K{{"Tier 2: Policy Route"}}
+        J{"Tier 1: Hard Route"}
+        K{"Tier 2: Policy Route"}
         L["Score All Models"]
         N["Select Highest Score"]
     end
 
     subgraph Models["🤖 MODEL POOL"]
-        O["gemma3:1b<br/>Simple & Fast"]
-        P["qwen3:0.6b-8b<br/>Reasoning"]
-        Q["ministral-3:3b-14b<br/>Multimodal"]
-        R["gpt-oss:20b<br/>All Capabilities"]
+        O["gemma3:1b"]
+        P["qwen3 family"]
+        Q["ministral-3 family"]
+        R["gpt-oss:20b"]
     end
 
     subgraph Output["📤 OUTPUT"]
-        S[/"✅ Selected Model"/]
+        S["✅ Selected Model"]
         T["📋 Routing Metadata"]
     end
 
     A --> M
-    M --> B & C & D & E
+    M --> B
+    M --> C
+    M --> D
+    M --> E
     
-    B & C & D & E --> F
+    B --> F
+    C --> F
+    D --> F
+    E --> F
     
-    F --> G & H & I
+    F --> G
+    F --> H
+    F --> I
     
-    G & H & I --> J
+    G --> J
+    H --> J
+    I --> J
     
     J -->|"Match Found ✓"| S
     J -->|"No Match"| K
     
     K --> L
     L --> N
-    N --> O & P & Q & R
-    O & P & Q & R --> S
+    N --> O
+    N --> P
+    N --> Q
+    N --> R
+    O --> S
+    P --> S
+    Q --> S
+    R --> S
     S --> T
-
-    style Input fill:#1e1b4b,stroke:#6366f1,color:#e0e7ff
-    style Signal fill:#312e81,stroke:#818cf8,color:#e0e7ff
-    style Classification fill:#4c1d95,stroke:#a78bfa,color:#f5f3ff
-    style Routing fill:#581c87,stroke:#c084fc,color:#faf5ff
-    style Models fill:#701a75,stroke:#e879f9,color:#fdf4ff
-    style Output fill:#14532d,stroke:#4ade80,color:#dcfce7
 ```
 
 ---
@@ -101,21 +109,16 @@ Every incoming query is analyzed to extract a **Signal** object containing:
 ### Step 2: Task Classification
 Using **DSPy**, the router classifies complexity:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  LOW          │  MEDIUM              │  HIGH                    │
-│  ─────        │  ────────            │  ────                    │
-│  • Greetings  │  • Multi-step tasks  │  • Complex reasoning     │
-│  • Simple Q&A │  • Context-dependent │  • Long-form generation  │
-│  • Basic cmds │  • Moderate analysis │  • Technical problems    │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Level | Examples |
+|-------|----------|
+| **Low** | Greetings, Simple Q&A, Basic commands |
+| **Medium** | Multi-step tasks, Context-dependent queries |
+| **High** | Complex reasoning, Long-form generation, Technical problems |
 
 ### Step 3: Two-Tier Routing
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#0ea5e9', 'lineColor': '#38bdf8'}}}%%
-graph LR
+flowchart LR
     subgraph T1["⚡ TIER 1: Hard Route"]
         A["Rule-Based Engine"]
         B["Immediate Decisions"]
@@ -128,10 +131,7 @@ graph LR
         F["Best Fit Selection"]
     end
     
-    T1 -->|Fallback| T2
-    
-    style T1 fill:#0c4a6e,stroke:#0ea5e9,color:#e0f2fe
-    style T2 fill:#1e3a5f,stroke:#38bdf8,color:#e0f2fe
+    T1 -->|"Fallback"| T2
 ```
 
 #### Tier 1: Hard Route (Fast Path)
@@ -144,44 +144,35 @@ Handles obvious cases with zero computation:
 #### Tier 2: Policy Route (Optimization Path)
 Calculates weighted compatibility scores:
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    SCORING WEIGHTS                           │
-├──────────────────┬───────────────────────────────────────────┤
-│ Capability Match │ ████████████████████████░░░░░░░░░░░░ 40%  │
-│ Complexity Match │ ██████████████████░░░░░░░░░░░░░░░░░░ 30%  │
-│ Latency Match    │ ████████████░░░░░░░░░░░░░░░░░░░░░░░░ 20%  │
-│ Token Handling   │ ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 10%  │
-└──────────────────┴───────────────────────────────────────────┘
-```
+| Weight | Category |
+|--------|----------|
+| **40%** | Capability Matching |
+| **30%** | Complexity Matching |
+| **20%** | Latency Matching |
+| **10%** | Token Handling |
 
 ---
 
 ## 🤖 Supported Models
 
 ```mermaid
-%%{init: {'theme': 'base'}}%%
-graph TB
-    subgraph Small["🐇 Small & Fast (< 4B)"]
+flowchart TB
+    subgraph Small["🐇 Small - Fast"]
         A["qwen3:0.6b<br/>🧠 Reasoning"]
         B["gemma3:1b<br/>💬 Instructions"]
         C["ministral-3:3b<br/>🖼️ Multimodal"]
     end
     
-    subgraph Medium["🦊 Medium (4B-8B)"]
+    subgraph Medium["🦊 Medium"]
         D["qwen3:4b<br/>🧠 Reasoning"]
         E["ministral-3:8b<br/>🖼️ Multimodal"]
         F["qwen3:8b<br/>🧠 Reasoning"]
     end
     
-    subgraph Large["🦁 Large (> 8B)"]
+    subgraph Large["🦁 Large"]
         G["ministral-3:14b<br/>🖼️ Multimodal"]
         H["gpt-oss:20b<br/>🧠🖼️ Everything"]
     end
-    
-    style Small fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
-    style Medium fill:#fef3c7,stroke:#f59e0b,color:#78350f
-    style Large fill:#fee2e2,stroke:#ef4444,color:#7f1d1d
 ```
 
 | Model | Size | Reasoning | Multimodal | Speed | Best For |
