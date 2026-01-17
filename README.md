@@ -1,189 +1,160 @@
-# 🤖 LLM Router
+# LLM Router
 
-> **Intelligent query routing for optimal model selection** — A sophisticated, multi-strategy LLM router designed to intelligently direct user queries to the most appropriate model based on task complexity, required capabilities, and performance constraints.
-
-[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)](https://python.org)
-[![DSPy](https://img.shields.io/badge/DSPy-Powered-purple)](https://github.com/stanfordnlp/dspy)
-[![Ollama](https://img.shields.io/badge/Ollama-Compatible-brightgreen)](https://ollama.com)
+A multi-strategy LLM router that directs queries to the most appropriate model based on task complexity, capabilities, and performance constraints.
 
 ---
 
-## 🎯 Overview
+## Overview
 
-LLM Router uses a **unified approach** to select the best model for any given query. It combines rule-based heuristics with score-based optimization to balance **accuracy**, **latency**, and **cost**.
+LLM Router combines rule-based heuristics with score-based optimization to select the best model for each query, balancing accuracy, latency, and cost.
 
 ---
 
-## 🔄 Architecture Flow
+## Architecture
 
 ```mermaid
 flowchart TD
-    A["🗣️ User Query"] --> M{"🖼️ Multimodal?"}
+    A[User Query] --> M{Multimodal?}
     
-    M --> B["📊 Token Counter"]
-    M --> C["🧠 Reasoning Detector"]
-    M --> D["⚡ Latency Analyzer"]
-    M --> E["🛡️ Safety Scorer"]
+    M --> B[Token Counter]
+    M --> C[Reasoning Detector]
+    M --> D[Latency Analyzer]
+    M --> E[Safety Scorer]
     
-    B --> F[["DSPy Classifier"]]
+    B --> F[[DSPy Classifier]]
     C --> F
     D --> F
     E --> F
     
-    F --> G["Low Complexity"]
-    F --> H["Medium Complexity"]
-    F --> I["High Complexity"]
+    F --> G[Low Complexity]
+    F --> H[Medium Complexity]
+    F --> I[High Complexity]
     
-    G --> J{"Tier 1: Hard Route"}
+    G --> J{Hard Route}
     H --> J
     I --> J
     
-    J -->|"Match Found ✓"| S["✅ Selected Model"]
-    J -->|"No Match"| K{"Tier 2: Policy Route"}
+    J -->|Match Found| S[Selected Model]
+    J -->|No Match| K{Policy Route}
     
-    K --> L["Score All Models"]
-    L --> N["Select Highest Score"]
+    K --> L[Score All Models]
+    L --> N[Select Highest Score]
     
-    N --> O["gemma3:1b"]
-    N --> P["qwen3 family"]
-    N --> Q["ministral-3 family"]
-    N --> R["gpt-oss:20b"]
+    N --> O[gemma3:1b]
+    N --> P[qwen3 family]
+    N --> Q[ministral-3 family]
+    N --> R[gpt-oss:20b]
     
     O --> S
     P --> S
     Q --> S
     R --> S
     
-    S --> T["📋 Routing Metadata"]
+    S --> T[Routing Metadata]
 ```
 
 ---
 
-## 🔬 How It Works
+## How It Works
 
-### Step 1: Signal Extraction
-Every incoming query is analyzed to extract a **Signal** object containing:
+### Signal Extraction
+Each query is analyzed to extract:
 
-| Signal Property | Description | Detection Method |
-|----------------|-------------|------------------|
-| 📊 **Token Count** | Estimated input length | Word count × 1.5 |
-| 🧠 **Reasoning** | Logical/analytical need | Keyword matching |
-| ⚡ **Latency** | Response urgency | Context keywords |
-| 🖼️ **Multimodal** | Non-text content | Explicit flag |
-| 🛡️ **Safety Score** | Content safety (0-1) | Blocklist check |
+| Property | Description |
+|----------|-------------|
+| Token Count | Estimated input length |
+| Reasoning | Whether logical analysis is needed |
+| Latency | Response urgency |
+| Multimodal | Non-text content flag |
+| Safety Score | Content safety rating (0-1) |
 
-### Step 2: Task Classification
-Using **DSPy**, the router classifies complexity:
+### Task Classification
+DSPy classifies queries into complexity levels:
 
 | Level | Examples |
 |-------|----------|
-| **Low** | Greetings, Simple Q&A, Basic commands |
-| **Medium** | Multi-step tasks, Context-dependent queries |
-| **High** | Complex reasoning, Long-form generation, Technical problems |
+| Low | Greetings, simple Q&A |
+| Medium | Multi-step tasks, context-dependent queries |
+| High | Complex reasoning, technical problems |
 
-### Step 3: Two-Tier Routing
+### Routing
 
-```mermaid
-flowchart LR
-    A["⚡ Rule-Based Engine"] --> B["Immediate Decisions"]
-    B --> C["Zero Latency"]
-    C -->|"Fallback"| D["🎯 Score Calculator"]
-    D --> E["Optimization"]
-    E --> F["Best Fit Selection"]
-```
+**Tier 1: Hard Route** — Rule-based fast path for obvious cases:
+- Unsafe content → Blocked
+- Simple tasks → `gemma3:1b`
+- Reasoning tasks → `qwen` family
+- Multimodal tasks → `ministral` or `gpt-oss:20b`
 
-#### Tier 1: Hard Route (Fast Path)
-Handles obvious cases with zero computation:
-- 🚫 **Unsafe Content** → Blocked immediately
-- 💬 **Simple Tasks** → `gemma3:1b`
-- 🧠 **Reasoning Tasks** → `qwen` family
-- 🖼️ **Multimodal Tasks** → `ministral` or `gpt-oss:20b`
-
-#### Tier 2: Policy Route (Optimization Path)
-Calculates weighted compatibility scores:
+**Tier 2: Policy Route** — Score-based optimization when hard route doesn't match:
 
 | Weight | Category |
 |--------|----------|
-| **40%** | Capability Matching |
-| **30%** | Complexity Matching |
-| **20%** | Latency Matching |
-| **10%** | Token Handling |
+| 40% | Capability matching |
+| 30% | Complexity matching |
+| 20% | Latency matching |
+| 10% | Token handling |
 
 ---
 
-## 🤖 Supported Models
+## Supported Models
 
-```mermaid
-flowchart LR
-    A["qwen3:0.6b 🧠"] --- B["gemma3:1b 💬"]
-    B --- C["ministral-3:3b 🖼️"]
-    C --- D["qwen3:4b 🧠"]
-    D --- E["ministral-3:8b 🖼️"]
-    E --- F["qwen3:8b �"]
-    F --- G["ministral-3:14b 🖼️"]
-    G --- H["gpt-oss:20b 🧠🖼️"]
-```
-
-| Model | Size | Reasoning | Multimodal | Speed | Best For |
-|:------|:----:|:---------:|:----------:|:-----:|:---------|
-| `qwen3:0.6b` | 0.6B | ✅ | ❌ | ⚡⚡⚡ | Tiny reasoning tasks |
-| `gemma3:1b` | 1B | ❌ | ❌ | ⚡⚡⚡ | Simple instructions |
-| `ministral-3:3b` | 3B | ❌ | ✅ | ⚡⚡ | General multimodal |
-| `qwen3:4b` | 4B | ✅ | ❌ | ⚡⚡ | Balanced reasoning |
-| `ministral-3:8b` | 8B | ❌ | ✅ | ⚡ | Advanced multimodal |
-| `qwen3:8b` | 8B | ✅ | ❌ | ⚡ | Complex reasoning |
-| `ministral-3:14b` | 14B | ❌ | ✅ | 🐢 | High-quality multimodal |
-| `gpt-oss:20b` | 20B | ✅ | ✅ | 🐢 | Any complex task |
+| Model | Size | Reasoning | Multimodal | Speed |
+|:------|:----:|:---------:|:----------:|:-----:|
+| `qwen3:0.6b` | 0.6B | Yes | No | Fast |
+| `gemma3:1b` | 1B | No | No | Fast |
+| `ministral-3:3b` | 3B | No | Yes | Medium |
+| `qwen3:4b` | 4B | Yes | No | Medium |
+| `ministral-3:8b` | 8B | No | Yes | Slow |
+| `qwen3:8b` | 8B | Yes | No | Slow |
+| `ministral-3:14b` | 14B | No | Yes | Slow |
+| `gpt-oss:20b` | 20B | Yes | Yes | Slow |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 LLmRouter/
 ├── Router/
-│   ├── main.py              # 🚀 UnifiedRouter entry point
-│   ├── Signals.py           # 📊 Signal extraction logic
-│   ├── task_classification.py # 🏷️ DSPy complexity classifier
-│   ├── Hard_Route.py        # ⚡ Rule-based fast routing
-│   ├── Policy_Optimization.py # 🎯 Score-based model selection
-│   └── test.py              # 🧪 Comprehensive test suite
+│   ├── main.py               # UnifiedRouter entry point
+│   ├── Signals.py            # Signal extraction
+│   ├── task_classification.py # DSPy classifier
+│   ├── Hard_Route.py         # Rule-based routing
+│   ├── Policy_Optimization.py # Score-based selection
+│   └── test.py               # Test suite
 ├── README.md
 └── pyproject.toml
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```python
 from Router.main import UnifiedRouter
 
 router = UnifiedRouter()
 
-# 💬 Route a simple text query
+# Route a query
 result = router.route("What is the capital of France?")
-print(f"Selected Model: {result['model']}")
-# Output: Selected Model: gemma3:1b
+print(result['model'])  # gemma3:1b
 
-# 🧠 Route a reasoning task
+# Route a reasoning task
 result = router.route("Explain quantum mechanics step-by-step")
-print(f"Selected Model: {result['model']}")
-# Output: Selected Model: qwen3:8b
+print(result['model'])  # qwen3:8b
 
-# 🖼️ Route a multimodal reasoning task
-result = router.route("Explain the math in this image", multimodal=True)
-print(f"Selected Model: {result['model']}")
-# Output: Selected Model: gpt-oss:20b
+# Route a multimodal task
+result = router.route("Describe this image", multimodal=True)
+print(result['model'])  # ministral-3:8b
 ```
 
-### Response Structure
+### Response Format
 
 ```python
 {
-    "model": "qwen3:8b",           # Selected model
-    "routing_method": "hard_route", # Which tier was used
-    "complexity": "high",           # Classified complexity
+    "model": "qwen3:8b",
+    "routing_method": "hard_route",
+    "complexity": "high",
     "signal": {
         "tokens": 15,
         "reasoning": True,
@@ -196,14 +167,6 @@ print(f"Selected Model: {result['model']}")
 
 ---
 
-## 📜 License
+## License
 
-MIT License — feel free to use, modify, and distribute.
-
----
-
-<div align="center">
-
-**Built with ❤️ using [DSPy](https://github.com/stanfordnlp/dspy) and [Ollama](https://ollama.com)**
-
-</div>
+MIT
